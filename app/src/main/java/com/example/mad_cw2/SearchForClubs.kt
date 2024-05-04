@@ -1,6 +1,8 @@
 package com.example.mad_cw2
 
 import android.content.Context
+import android.graphics.BitmapFactory
+import android.media.Image
 import android.os.Bundle
 import android.util.Log
 import androidx.activity.ComponentActivity
@@ -32,6 +34,8 @@ import com.example.mad_cw2.ui.theme.MAD_CW2Theme
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import java.net.HttpURLConnection
+import java.net.URL
 
 class SearchForClubs : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -104,8 +108,19 @@ suspend fun searchByName(context: Context, inputString: String): List<Club>{
         val database = Room.databaseBuilder(context, AppDatabase::class.java, "app-database").build()
         val clubs = database.ClubDao().searchClubs(inputString)
         database.close()
-        Log.d("ss",clubs.toString())
         clubs
 
     }
+}
+
+suspend fun loadWebImage(webAddress: String): Image {
+    val url = URL(webAddress)
+    val con: HttpURLConnection = url.openConnection() as HttpURLConnection
+    con.doInput = true
+    con.connect()
+    val inputStream: InputStream = con.inputStream
+    val bitmap = BitmapFactory.decodeStream(inputStream)
+    con.disconnect()
+
+    return Image(bitmap)
 }
