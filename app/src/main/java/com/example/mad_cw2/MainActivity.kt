@@ -78,6 +78,15 @@ fun MainGUi(context : Context){
         ) {
             Text(text = "Search for Clubs")
         }
+        Button(
+            onClick =
+            {
+                val intent = Intent(context, SearchClubsInWeb::class.java)
+                context.startActivity(intent)
+            }
+        ) {
+          Text("Search Clubs in Web")
+        }
     }
 }
 

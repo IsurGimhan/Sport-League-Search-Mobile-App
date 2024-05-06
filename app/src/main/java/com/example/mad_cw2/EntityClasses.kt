@@ -28,3 +28,13 @@ data class Club(
     val teamJersey: String,
     val teamLogo: String
 )
+
+data class Teams(
+    val idTeam: String,
+    val name: String,
+    val teamJersey: String
+)
+
+data class  Jerseys(
+    val  jerseyLink:String
+)
