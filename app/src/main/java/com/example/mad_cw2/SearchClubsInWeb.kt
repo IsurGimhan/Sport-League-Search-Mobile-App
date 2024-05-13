@@ -6,6 +6,7 @@ import android.util.Log
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.compose.foundation.Image
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
@@ -26,6 +27,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.asImageBitmap
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
 import com.example.mad_cw2.ui.theme.MAD_CW2Theme
 import kotlinx.coroutines.Dispatchers
@@ -48,13 +50,20 @@ class SearchClubsInWeb : ComponentActivity() {
                     modifier = Modifier.fillMaxSize(),
                     color = MaterialTheme.colorScheme.background
                 ) {
-                    Column(
-                        modifier = Modifier.fillMaxSize(),
-                        horizontalAlignment = Alignment.CenterHorizontally
-                    )
-                    {
-                        SearchClubsInWebGUI()
+                    Box{
+                        Image(
+                            painter = painterResource(id = R.drawable.img1),
+                            contentDescription = "BackgroundImage",
+                            modifier = Modifier.fillMaxSize()
+                        )
+
+                        Box{
+                            SearchClubsInWebGUI()
+                        }
                     }
+
+
+
                 }
             }
         }
@@ -105,6 +114,7 @@ fun SearchClubsInWebGUI() {
 }
 
 
+// fetchTeams method will retrun list of Team details that fetch from the web service
 suspend fun fetchTeams(): List<Teams> {
 
     val urlString = "https://www.thesportsdb.com/api/v1/json/3/searchteams.php?t=Arsenal"
@@ -142,14 +152,15 @@ suspend fun fetchTeams(): List<Teams> {
 }
 
 
+// fetchJerseys method will return list of Bitmaps
 suspend fun fetchJerseys(userInput: String, teamList: List<Teams>): List<Bitmap> {
     var jerseyImageList = mutableListOf<Bitmap>()
 
     for (team in teamList) {
+        //check if the userinput is a part of any club names
         if (team.name.lowercase().contains(userInput.lowercase())) {
-            val url =
-                "https://www.thesportsdb.com/api/v1/json/3/lookupequipment.php?id=${team.idTeam}"
-            val jerseysLinkList = LoadJerseysFromweb(url)
+            val url = "https://www.thesportsdb.com/api/v1/json/3/lookupequipment.php?id=${team.idTeam}"
+            val jerseysLinkList = loadJerseysFromWeb(url)
 
             for (link in jerseysLinkList) {
                 jerseyImageList.add(loadWebImage(link.jerseyLink))
@@ -160,7 +171,10 @@ suspend fun fetchJerseys(userInput: String, teamList: List<Teams>): List<Bitmap>
 }
 
 
-suspend fun LoadJerseysFromweb(urlString: String): List<Jerseys> {
+
+// loadJerseysFromWeb method will take the url of a team jersey list and return list of jersey image urls
+// base code was taken from the lecture notes
+suspend fun loadJerseysFromWeb(urlString: String): List<Jerseys> {
 
     val url = URL(urlString)
     val con: HttpURLConnection = url.openConnection() as HttpURLConnection
@@ -170,12 +184,10 @@ suspend fun LoadJerseysFromweb(urlString: String): List<Jerseys> {
     withContext(Dispatchers.IO) {
         var bf = BufferedReader(InputStreamReader(con.inputStream))
         var line: String? = bf.readLine()
-        Log.d("d", "s")
         while (line != null) { // keep reading until no more lines of text
             stb.append(line + "\n")
             line = bf.readLine()
         }
-        Log.d("d1", "ss")
     }
 
     // this contains the full JSON returned by the Web Service
@@ -186,7 +198,6 @@ suspend fun LoadJerseysFromweb(urlString: String): List<Jerseys> {
     val jerseyList = mutableListOf<Jerseys>()
 
     for (i in 0..<jsonArray.length()) {
-        Log.d("d4", "s")
         val teamObject = jsonArray.getJSONObject(i)
         jerseyList.add(
             Jerseys(

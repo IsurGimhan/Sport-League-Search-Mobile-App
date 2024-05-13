@@ -7,7 +7,9 @@ import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.compose.foundation.Image
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
@@ -26,8 +28,10 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.asImageBitmap
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
 import androidx.room.Room
 import com.example.mad_cw2.ui.theme.MAD_CW2Theme
@@ -47,39 +51,57 @@ class SearchForClubs : ComponentActivity() {
                     modifier = Modifier.fillMaxSize(),
                     color = MaterialTheme.colorScheme.background
                 ) {
-                    SearchForClubsGUI(this@SearchForClubs)
+                    Box{
+                        Image(
+                            painter = painterResource(id = R.drawable.img1),
+                            contentDescription = "BackgroundImage",
+                            modifier = Modifier.fillMaxSize()
+                        )
+
+                        Box{
+                            SearchForClubsGUI(this@SearchForClubs)
+                        }
+                    }
+
                 }
             }
         }
     }
 }
 
-
+//composable GUI method to display textBox button and club details
 @Composable
 fun SearchForClubsGUI(context : Context){
     var text by rememberSaveable{ mutableStateOf("")}
     var clubAndImageDetailsMap by rememberSaveable{ mutableStateOf<Map<Club, Bitmap>>(emptyMap())}
     val coroutineScope = rememberCoroutineScope()
 
-    Column {
-        OutlinedTextField(
-            value = text,
-            onValueChange = { text = it },
-            label = { Text("Enter a text") }
-        )
+    Column (
+        modifier = Modifier.fillMaxSize(),
+        horizontalAlignment = Alignment.CenterHorizontally
+    ){
+        Row (verticalAlignment = Alignment.CenterVertically)
+        {
+            OutlinedTextField(
+                value = text,
+                onValueChange = { text = it },
+                label = { Text("Enter a text") }
+            )
 
-        Button(
-            onClick =
-            {
-                coroutineScope.launch {
-                    val selectedClubsList = searchByName(context, text)
-                    clubAndImageDetailsMap = selectedClubsList.zip(imageBitMapList(selectedClubsList)).toMap()
+            Button(
+                onClick =
+                {
+                    coroutineScope.launch {
+                        val selectedClubsList = searchByName(context, text)
+                        clubAndImageDetailsMap = selectedClubsList.zip(imageBitMapList(selectedClubsList)).toMap()
 
+                    }
                 }
+            ) {
+                Text("Search")
             }
-        ) {
-            Text("Search")
         }
+
 
         Card(
             modifier = Modifier
@@ -89,33 +111,34 @@ fun SearchForClubsGUI(context : Context){
             ),
             shape = RoundedCornerShape(16.dp),
         ) {
+            // lazyCoulmn is used to display the club name and logo to the user
             LazyColumn {
                 items(clubAndImageDetailsMap.toList()) { (key, value) ->
                     Column(modifier = Modifier.padding(16.dp)) {
                         Text("Name: ${key.name}")
                         Image(
                             bitmap = value.asImageBitmap(),
-                            contentDescription = "some useful description",
+                            contentDescription = "club logo",
                         )
                     }
                 }
             }
-
-
         }
     }
 }
 
+
+// searchByName method will return list of clubs from the database
 suspend fun searchByName(context: Context, inputString: String): List<Club>{
     return withContext(Dispatchers.IO) {
         val database = Room.databaseBuilder(context, AppDatabase::class.java, "app-database").build()
         val clubs = database.ClubDao().searchClubs(inputString)
-        database.close()
         clubs
 
     }
 }
 
+// loadWebImage method will return the bitMap of the logo
 suspend fun loadWebImage(webAddress: String): Bitmap {
     return withContext(Dispatchers.IO) {
         val url = URL(webAddress)
@@ -131,6 +154,7 @@ suspend fun loadWebImage(webAddress: String): Bitmap {
     }
 }
 
+// imageBitMapList will return a list of log bitMaps
 suspend fun imageBitMapList(keyList: List<Club>): List<Bitmap>{
     var imageList = mutableListOf<Bitmap>()
     for(i in keyList.indices){
